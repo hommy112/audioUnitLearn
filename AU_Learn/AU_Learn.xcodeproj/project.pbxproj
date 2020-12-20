@@ -58,6 +58,7 @@
 		A44C80B9258EF05200F6C378 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A44C80B7258EF05200F6C378 /* MainInterface.storyboard */; };
 		A44C80BD258EF05200F6C378 /* MusicEffect.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A44C809C258EF05200F6C378 /* MusicEffect.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A44C80C7258F11DD00F6C378 /* AudioUnitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A44C80C6258F11DD00F6C378 /* AudioUnitManager.swift */; };
+		A44C80D3258F15FD00F6C378 /* SimplePlayEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A44C80D2258F15FD00F6C378 /* SimplePlayEngine.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -178,6 +179,7 @@
 		A44C80B8258EF05200F6C378 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
 		A44C80BA258EF05200F6C378 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A44C80C6258F11DD00F6C378 /* AudioUnitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioUnitManager.swift; sourceTree = "<group>"; };
+		A44C80D2258F15FD00F6C378 /* SimplePlayEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimplePlayEngine.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -250,6 +252,7 @@
 				A44C7FD1258E16C900F6C378 /* SceneDelegate.swift */,
 				A44C7FD3258E16C900F6C378 /* ViewController.swift */,
 				A44C80C6258F11DD00F6C378 /* AudioUnitManager.swift */,
+				A44C80D2258F15FD00F6C378 /* SimplePlayEngine.swift */,
 				A44C7FD5258E16C900F6C378 /* Main.storyboard */,
 				A44C7FD8258E16CD00F6C378 /* Assets.xcassets */,
 				A44C7FDA258E16CD00F6C378 /* LaunchScreen.storyboard */,
@@ -676,6 +679,7 @@
 				A44C7FD4258E16C900F6C378 /* ViewController.swift in Sources */,
 				A44C7FD0258E16C900F6C378 /* AppDelegate.swift in Sources */,
 				A44C80C7258F11DD00F6C378 /* AudioUnitManager.swift in Sources */,
+				A44C80D3258F15FD00F6C378 /* SimplePlayEngine.swift in Sources */,
 				A44C7FD2258E16C900F6C378 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
