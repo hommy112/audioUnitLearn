@@ -180,6 +180,7 @@
 		A44C80BA258EF05200F6C378 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A44C80C6258F11DD00F6C378 /* AudioUnitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioUnitManager.swift; sourceTree = "<group>"; };
 		A44C80D2258F15FD00F6C378 /* SimplePlayEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimplePlayEngine.swift; sourceTree = "<group>"; };
+		A44C80D9258F2CE800F6C378 /* AU 相关类介绍.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "AU 相关类介绍.md"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -257,6 +258,7 @@
 				A44C7FD8258E16CD00F6C378 /* Assets.xcassets */,
 				A44C7FDA258E16CD00F6C378 /* LaunchScreen.storyboard */,
 				A44C7FDD258E16CD00F6C378 /* Info.plist */,
+				A44C80D9258F2CE800F6C378 /* AU 相关类介绍.md */,
 			);
 			path = AU_Learn;
 			sourceTree = "<group>";
