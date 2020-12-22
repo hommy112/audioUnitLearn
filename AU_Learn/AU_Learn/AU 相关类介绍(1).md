@@ -759,5 +759,397 @@ componentDescription : 一个单独的AUAudioUnit子类可以实现多个音频�
 这也可以作为一个generator，或一系列相关的effect。组件
 description指定被实例化的组件。
 options : 标识是否将扩展作为主程序的一个静态库或者进程或者一个外部程序 ,ios 选外部程序
-outError : 返回创建失败的李游
+outError : 返回创建失败的理由
+
+```
+/**    @method        initWithComponentDescription:error:
+    @brief        Convenience initializer (omits options).
+*/
+public convenience init(componentDescription: AudioComponentDescription) throws
+```
+便利构造器
+
+```
+/**    @method    instantiateWithComponentDescription:options:completionHandler:
+    @brief    Asynchronously create an AUAudioUnit instance.
+    @param componentDescription
+        The AudioComponentDescription of the audio unit to instantiate.
+    @param options
+        See the discussion of AudioComponentInstantiationOptions in AudioToolbox/AudioComponent.h.
+    @param completionHandler
+        Called in a thread/dispatch queue context internal to the implementation. The client should
+        retain the supplied AUAudioUnit.
+    @discussion
+        Certain types of AUAudioUnits must be instantiated asynchronously -- see 
+        the discussion of kAudioComponentFlag_RequiresAsyncInstantiation in
+        AudioToolbox/AudioComponent.h.
+
+        Note: Do not block the main thread while waiting for the completion handler to be called;
+        this can deadlock.
+*/
+open class func instantiate(with componentDescription: AudioComponentDescription, options: AudioComponentInstantiationOptions = [], completionHandler: @escaping (AUAudioUnit?, Error?) -> Void)
+```
+异步的创建一个AUAudioUnit实例无法被重载
+componentDescription : 实例的描述具体如下
+如下 {
+var componentType: OSType
+A unique 4-byte code identifying the interface for the component.
+var componentSubType: OSType
+A 4-byte code that you can use to indicate the purpose of a component. For example, you could use lpas or lowp as a mnemonic indication that an audio unit is a low-pass filter.
+var componentManufacturer: OSType
+The unique vendor identifier, registered with Apple, for the audio component.
+var componentFlags: UInt32
+Set this value to zero.
+var componentFlagsMask: UInt32
+Set this value to zero.’
+}
+
+options :  {
+static var loadInProcess: AudioComponentInstantiationOptions
+static var loadOutOfProcess: AudioComponentInstantiationOptions
+}
+
+```
+/**    @property    componentDescription
+    @brief        The AudioComponentDescription with which the audio unit was created.
+*/
+open var componentDescription: AudioComponentDescription { get }
+```
+组件的描述
+
+
+```
+/**    @property    component
+    @brief        The AudioComponent which was found based on componentDescription when the
+                audio unit was created.
+*/
+open var component: AudioComponent { get }
+```
+组件
+
+```
+/**    @property    componentName
+    @brief        The unit's component's name.
+    @discussion
+        By convention, an audio unit's component name is its manufacturer's name, plus ": ",
+        plus the audio unit's name. The audioUnitName and manufacturerName properties are derived
+        from the component name.
+*/
+open var componentName: String? { get }
+```
+组件名
+
+```
+/**    @property    audioUnitName
+    @brief        The audio unit's name.
+*/
+open var audioUnitName: String? { get }
+```
+au 名
+
+
+```
+/**    @property    manufacturerName
+    @brief        The manufacturer's name.
+*/
+open var manufacturerName: String? { get }
+```
+制造商一般为 apple
+
+```
+/**    @property    audioUnitShortName
+    @brief        A short name for the audio unit.
+    @discussion
+        Audio unit host applications can display this name in situations where the audioUnitName 
+        might be too long. The recommended length is up to 16 characters. Host applications may 
+        truncate it.
+*/
+@available(iOS 11.0, *)
+open var audioUnitShortName: String? { get }
+```
+audioUnit 的短名最长为 16 ,程序可能会展示该程序名若AU 的全名过长,即便如此也有可能被截断
+
+```
+/**    @property    componentVersion
+    @brief        The unit's component's version.
+*/
+open var componentVersion: UInt32 { get }
+```
+组件版本号
+
+```
+/**    @method        allocateRenderResourcesAndReturnError:
+    @brief        Allocate resources required to render.
+    @discussion
+        Hosts must call this before beginning to render. Subclassers should call the superclass
+        implementation.
+        
+        Bridged to the v2 API AudioUnitInitialize().
+*/
+open func allocateRenderResources() throws
+```
+分配需要处理的资源
+主程序在开始渲染前必须调用该函数,子类必须调用其父类的实现
+桥接了 v2 的AudioUnitInitialize().
+
+
+```
+/**    @method        deallocateRenderResources
+    @brief        Deallocate resources allocated by allocateRenderResourcesAndReturnError:
+    @discussion
+        Hosts should call this after finishing rendering. Subclassers should call the superclass
+        implementation.
+        
+        Bridged to the v2 API AudioUnitUninitialize().
+*/
+open func deallocateRenderResources()
+```
+在结束渲染之后调用该方法
+子类必须调用父类的该方法
+
+```
+/**    @property    renderResourcesAllocated
+    @brief        returns YES if the unit has render resources allocated.
+*/
+open var renderResourcesAllocated: Bool { get }
+```
+资源是否被分配
+
+```
+/**    @method        reset
+    @brief        Reset transitory rendering state to its initial state.
+    @discussion
+        Hosts should call this at the point of a discontinuity in the input stream being provided to
+        an audio unit, for example, when seeking forward or backward within a track. In response,
+        implementations should clear delay lines, filters, etc. Subclassers should call the
+        superclass implementation.
+        
+        Bridged to the v2 API AudioUnitReset(), in the global scope.
+*/
+open func reset()
+```
+迅速将渲染状态调整到初始状态
+主机应该在提供给音频单元的输入流中的不连续点调用此函数，例如，当在一个音轨内向前或向后搜索时。作为回应，实现应该清除延迟线、过滤器等。子类应该调用超类实现。
+
+
+```
+/**    @property    inputBusses
+    @brief        An audio unit's audio input connection points.
+    @discussion
+        Subclassers must override this property's getter. The implementation should return the same
+        object every time it is asked for it, since clients can install KVO observers on it.
+*/
+open var inputBusses: AUAudioUnitBusArray { get }
+```
+au 的输入链接点
+子类必须实现此 getter方法并且在 返回是应返回同一对象,从而客户端可以通过 kvo 对其进行监听
+bus 的定义如下 {
+func setFormat(AVAudioFormat)
+Sets the bus’s audio format.
+var format: AVAudioFormat
+The audio format and channel layout of audio being transferred on the bus.
+var isEnabled: Bool
+Determines whether the bus is active.
+var name: String?
+A name for the bus.
+var index: Int
+The index of this bus in its containing array.
+var busType: AUAudioUnitBusType
+The bus type.
+var ownerAudioUnit: AUAudioUnit
+The audio unit that owns the bus.
+var supportedChannelLayoutTags: [NSNumber]?
+An array of audio channel layout tags.
+var contextPresentationLatency: TimeInterval
+Information about latency in the audio unit’s processing context.
+var shouldAllocateBuffer: Bool
+
+These methods and properties are only of interest to audio unit subclasses.
+init(format: AVAudioFormat)
+Initializes a bus object with a specific format.
+var supportedChannelCounts: [NSNumber]?
+An array of numbers indicating the supported number of channels for this bus.
+var maximumChannelCount: AUAudioChannelCount
+The maximum number of channels supported for this bus.
+}
+
+
+```
+open var outputBusses: AUAudioUnitBusArray { get }
+```
+同上类似
+
+```
+/**    @property    renderBlock
+    @brief        Block which hosts use to ask the unit to render.
+    @discussion
+        Before invoking an audio unit's rendering functionality, a host should fetch this block and cache the result. The block can then be called from a realtime context without the possibility of blocking and causing an overload at the Core Audio HAL level.
+        
+        This block will call a subclass' internalRenderBlock, providing all realtime events scheduled for the current render time interval, bracketed by calls to any render observers.
+
+        Subclassers should override internalRenderBlock, not this property.
+        
+        Bridged to the v2 API AudioUnitRender().
+*/
+open var renderBlock: AURenderBlock { get }
+```
+在调用音频单元的渲染功能之前，主机应该获取这个块并缓存结果。块然后可以从实时上下文调用，而不会阻塞和导致 core audio HAL(硬件抽象层)级别过载。
+
+这个块将调用一个子类的internalRenderBlock，提供在当前渲染时间间隔内调度的所有实时事件，包含在对任何渲染观察者的调用中。
+子类应该重写internalRenderBlock，而不是这个属性。
+
+桥接到v2 API AudioUnitRender()。
+
+```
+/**    @property    scheduleParameterBlock
+    @brief        Block which hosts use to schedule parameters.
+    @discussion
+        As with renderBlock, a host should fetch and cache this block before beginning to render, if it intends to schedule parameters.
+                
+        The block is safe to call from any thread context, including realtime audio render threads.
+        
+        Subclassers should not override this; it is implemented in the base class and will schedule the events to be provided to the internalRenderBlock.
+        
+        Bridged to the v2 API AudioUnitScheduleParameters().
+*/
+open var scheduleParameterBlock: AUScheduleParameterBlock { get }
+```
+提供给主程序负责参数处理
+从任何线程上下文调用块都是安全的，包括实时音频渲染线程。
+
+```
+/**    @method        tokenByAddingRenderObserver:
+    @brief        Add a block to be called on each render cycle.
+    @discussion
+        The supplied block is called at the beginning and ending of each render cycle. It should
+        not make any blocking calls.
+        
+        This method is implemented in the base class AUAudioUnit, and should not be overridden.
+        
+        Bridged to the v2 API AudioUnitAddRenderNotify().
+    @param observer
+        The block to call.
+    @return
+        A token to be used when removing the observer.
+*/
+open func token(byAddingRenderObserver observer: @escaping AURenderObserver) -> Int
+``` 
+添加一个在每次渲染周期开始时调用的 block
+它不应该进行任何阻塞调用。
+这个方法是在AUAudioUnit基类中实现的，不允许被重写。
+桥接到v2 API AudioUnitAddRenderNotify()。
+
+
+```
+/**    @method        removeRenderObserver:
+    @brief        Remove an observer block added via tokenByAddingRenderObserver:
+    @param token
+        The token previously returned by tokenByAddingRenderObserver:
+
+        Bridged to the v2 API AudioUnitRemoveRenderNotify().
+*/
+open func removeRenderObserver(_ token: Int)
+```
+移除由 tokenByAddingRenderObserver: 方法添加的观察者
+tocken 是tokenByAddingRenderObserver提供的
+
+```
+/**    @property    maximumFramesToRender
+    @brief        The maximum number of frames which the audio unit can render at once.
+    @discussion
+        This must be set by the host before render resources are allocated. It cannot be changed
+        while render resources are allocated.
+        
+        Bridged to the v2 property kAudioUnitProperty_MaximumFramesPerSlice.
+*/
+open var maximumFramesToRender: AUAudioFrameCount
+```
+au 每次刻意渲染的帧数
+这必须在分配呈现资源之前由主程序设置。在分配渲染资源后不能更改它。
+桥接到v2属性kaudiounitproperty_maximumframespersice。
+
+```
+/**    @property    parameterTree
+    @brief        An audio unit's parameters, organized in a hierarchy.
+    @return
+        A parameter tree object, or nil if the unit has no parameters.
+    @discussion
+        Audio unit hosts can fetch this property to discover a unit's parameters. KVO notifications
+        are issued on this member to notify the host of changes to the set of available parameters.
+        
+        AUAudioUnit has an additional pseudo-property, "allParameterValues", on which KVO
+        notifications are issued in response to certain events where potentially all parameter
+        values are invalidated. This includes changes to currentPreset, fullState, and
+        fullStateForDocument.
+ 
+        Hosts should not attempt to set this property.
+
+        Subclassers should implement the parameterTree getter to expose parameters to hosts. They
+        should cache as much as possible and send KVO notifications on "parameterTree" when altering
+        the structure of the tree or the static information (ranges, etc) of parameters.
+        
+        This is similar to the v2 properties kAudioUnitProperty_ParameterList and
+        kAudioUnitProperty_ParameterInfo.
+ 
+        Note that it is not safe to modify this property in a real-time context.
+*/
+open var parameterTree: AUParameterTree?
+```
+一个树状组织的 au参数结构
+音频单元主机可以获取这个属性来发现AU的参数。在这个成员上发出KVO通知，以通知主机对可用参数集的更改。
+AUAudioUnit有一个额外的伪属性，“allParameterValues”，在这个伪属性上，KVO通知会在某些事件上发出，在这些事件中，所有的参数值都可能失效。这包括对currentPreset、fullState和fullStateForDocument的变更。
+主 程序不应尝试设置此属性。
+子类应该实现参数树getter将参数公开给宿主。当改变树的结构或参数的静态信息(范围等)时，应尽可能地缓存，并在“参数树”上发送KVO通知。
+这类似于kAudioUnitProperty_ParameterList和kAudioUnitProperty_ParameterInfo的v2属性。
+注意，`在实时上下文中修改此属性是不安全的!!!!!!!`
+
+```
+/**    @method        parametersForOverviewWithCount:
+    @brief        Returns the audio unit's `count` most important parameters.
+    @discussion
+        This property allows a host to query an audio unit for some small number of parameters which
+        are its "most important", to be displayed in a compact generic view.
+
+        An audio unit subclass should return an array of NSNumbers representing the addresses
+        of the `count` most important parameters.
+
+        The base class returns an empty array regardless of count.
+        
+        Partially bridged to kAudioUnitProperty_ParametersForOverview (v2 hosts can use that
+        property to access this v3 method of an audio unit).
+*/
+open func parametersForOverview(withCount count: Int) -> [NSNumber]
+```
+返回一些最重要的参数 count 是返回参数的数量
+父类每次都返回一个空数组
+子类需要自己实现该方法如果必要的话
+
+```
+open var allParameterValues: Bool { get } /// special pseudo-property for KVO
+```
+为 kvo 准备的伪属性???//todo
+
+```
+/**    @property    musicDeviceOrEffect
+    @brief        Specifies whether an audio unit responds to MIDI events.
+    @discussion
+        This is implemented in the base class and returns YES if the component type is music
+        device or music effect.
+*/
+open var isMusicDeviceOrEffect: Bool { get }
+```
+指出 au 是否可以执行 midi 相关的方法
+
+```
+/**    @property    virtualMIDICableCount
+    @brief        The number of virtual MIDI cables implemented by a music device or effect.
+    @discussion
+        A music device or MIDI effect can support up to 256 virtual MIDI cables of input; this
+        property expresses the number of cables supported by the audio unit.
+*/
+open var virtualMIDICableCount: Int { get }
+```
+返回通过音乐设备或者特效实现的虚拟的 midi 接口数量
+
+
 
