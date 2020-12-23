@@ -688,3 +688,372 @@ actionFlags : AudioUnitRenderActionFlags
 timestamp : AudioTimeStamp 
 frameCount : 输入需要的采样帧数
 inputBusNumber : 指出哪一条总线可用
+
+# AUAudioUnit extension
+
+```
+/**    @property    canPerformInput
+    @brief        Whether the I/O device can perform input.
+*/
+open var canPerformInput: Bool { get }
+```
+表示 io 设备是否具有可以输入
+
+```
+/**    @property    canPerformOutput
+    @brief        Whether the I/O device can perform output.
+*/
+open var canPerformOutput: Bool { get }
+```
+表示  io 设备是否具可以输出
+
+```
+
+/**    @property    inputEnabled
+    @brief        Flag enabling audio input from the unit.
+    @discussion    Input is disabled by default. This must be set to YES if input audio is desired. 
+                Setting to YES will have no effect if canPerformInput is false.
+*/
+open var isInputEnabled: Bool
+```
+表示输入设备是否开启
+如果需要使用输入设备需要手动打开输入设备,若当前的 io 设备无法输入,则设置无效
+
+```
+/**    @property    outputEnabled
+    @brief        Flag enabling audio output from the unit.
+    @discussion    Output is enabled by default.
+                Setting to YES will have no effect if canPerformOutput is false.
+*/
+open var isOutputEnabled: Bool
+```
+表示输出设备是否开启
+细节同上
+
+```
+/**    @property    outputProvider
+    @brief        The block that the output unit will call to get audio to send to the output.
+    @discussion    This block must be set if output is enabled.
+*/
+open var outputProvider: AURenderPullInputBlock?
+```
+一个输出单元调用来获得想要输出的音频的 block 若该单元开启了输出则必须设置这个 block
+
+```
+/**    @property    inputHandler
+    @brief        The block that the output unit will call to notify when input is available.
+    @discussion    See discussion for AUInputHandler.
+*/
+open var inputHandler: AUInputHandler?
+```
+当单元输入可用通知输出单元调用该 block
+
+```
+// TARGET_OS_IPHONE
+
+/**    @property    running
+    @brief        The audio device's running state.
+*/
+@available(iOS 11.0, *)
+open var isRunning: Bool { get }
+```
+音频设备当前是否正在运行
+
+```
+/**    @method        startHardwareAndReturnError:
+    @brief        Starts the audio hardware.
+    @param outError
+        Returned in the event of failure.
+*/
+open func startHardware() throws
+```
+开启硬件//todo
+
+```
+/**    @method        stopHardware
+    @brief        Stops the audio hardware.
+*/
+open func stopHardware()
+```
+关闭硬件//todo
+
+
+## AUAudioUnitBusArray
+
+所有的输入输出的音频轨
+通过在这个对象上使用KVO，主机可以通过有总线观察一个总线属性，而不必在每个单独的总线上观察它。(可以向单个总线添加侦听器，但这意味着必须观察总线计数的变化，并相应地添加/删除observer。
+另外，NSArray的addObserver:toObjectsAtIndexes:forKeyPath: context:是有问题的;
+它不允许单个对象覆盖KVO，因此在扩展进程中代理总线的总线不会得到消息。)
+
+一些音频单元(例如混频器)通过子类化支持可变数量的总线。当总线计数改变时，一个KVO通知被发送到" inputbus "或" outputbus "，视情况而定。
+
+子类的实现者也应该看 AUAudioUnitBusImplementation 类扩展。
+
+```
+/**    @method        initWithAudioUnit:busType:busses:
+    @brief        Initializes by making a copy of the supplied bus array.
+*/
+public init(audioUnit owner: AUAudioUnit, busType: AUAudioUnitBusType, busses busArray: [AUAudioUnitBus])
+```
+AUAudioUnitBusType     
+- case input = 1
+- case output = 2
+AUAudioUnitBus : 类后面介绍
+复制一份音频总线
+
+```
+/**    @method        initWithAudioUnit:busType:
+    @brief        Initializes an empty bus array.
+*/
+public convenience init(audioUnit owner: AUAudioUnit, busType: AUAudioUnitBusType)
+```
+建立一个空的音频总线数组
+
+
+```
+/**    @property    count
+*/
+open var count: Int { get }
+```
+包含的音频轨的数量
+
+```
+/**    @method        objectAtIndexedSubscript:
+*/
+open subscript(index: Int) -> AUAudioUnitBus { get }
+```
+某个音频轨
+
+```
+/**    @property    countChangeable
+    @brief        Whether the array can have a variable number of busses.
+    @discussion
+        The base implementation returns false.
+*/
+open var isCountChangeable: Bool { get }
+```
+音频轨的数量是否可以改变
+基础实现是不允许改动
+
+```
+/**    @property    setBusCount:error:
+    @brief        Change the number of busses in the array.
+*/
+open func setBusCount(_ count: Int) throws
+```
+改变音频轨的数量
+
+```
+/**    @method        addObserverToAllBusses:forKeyPath:options:context:
+    @brief        Add a KVO observer for a property on all busses in the array.
+*/
+open func addObserver(toAllBusses observer: NSObject, forKeyPath keyPath: String, options: NSKeyValueObservingOptions = [], context: UnsafeMutableRawPointer?)
+```
+```
+/**    @method        removeObserverFromAllBusses:forKeyPath:context:
+    @brief        Remove a KVO observer for a property on all busses in the array.
+*/
+open func removeObserver(fromAllBusses observer: NSObject, forKeyPath keyPath: String, context: UnsafeMutableRawPointer?)
+```
+
+```
+/// The audio unit that owns the bus.
+unowned(unsafe) open var ownerAudioUnit: AUAudioUnit { get }
+```
+```
+/// Which bus array this is (input or output).
+open var busType: AUAudioUnitBusType { get }
+```
+以上为不用翻译也不会造成歧义的
+
+## AUAudioUnitBus
+
+输入输出在 AU 上的连接点
+
+```
+/**    @property    format
+    @brief        The audio format and channel layout of audio being transferred on the bus.
+    @discussion
+        Bridged to the v2 property kAudioUnitProperty_StreamFormat.
+*/
+open var format: AVAudioFormat { get }
+```
+传递给 bus 的音频格式和声道布局
+
+```
+/**    @property    setFormat:error:
+    @brief        Sets the bus's audio format.
+    @discussion
+        Audio units can generally be expected to support AVAudioFormat's standard format
+        (deinterleaved 32-bit float), at any sample rate. Channel counts can be more complex;
+        see AUAudioUnit.channelCapabilities.
+*/
+open func setFormat(_ format: AVAudioFormat) throws
+```
+为音频轨设置音频格式
+一般认为 AU 支持任何码率的 AVAudioFormat 的标准格式(去交错的 32 位浮点数)
+而声道可能会更加复杂
+请参考 AUAudioUnit.channelCapabilities.
+
+```
+/** @property    shouldAllocateBuffer
+    @brief        Controls the audio unit's allocation strategy for a bus.
+    @discussion
+        Hosts can set this flag to communicate whether an audio unit should allocate its own buffer.
+        By default this flag is set to true.
+
+        On the output side, shouldAllocateBuffer=false means the AU can assume that it will be
+        called with non-null output buffers. If shouldAllocateBuffer=true (the default), the AU must
+        be prepared to be called with null pointers and replace them with pointers to its internally
+        allocated buffer.
+
+        On the input side, shouldAllocateBuffer=false means the AU can pull for input using a buffer
+        list with null buffer pointers, and assume that the pull input block will provide pointers.
+        If shouldAllocateBuffer=true (the default), the AU must pull with non-null pointers while
+        still being prepared for the source to replace them with pointers of its own.
+
+        Bridged to the v2 property kAudioUnitProperty_ShouldAllocateBuffer.
+*/
+@available(iOS 11.0, *)
+open var shouldAllocateBuffer: Bool
+```
+表示 au 对音频轨的内存分配的控制策略
+主机可以设置这个标志来交流音频单元是否应该分配它自己的缓冲区。默认情况下，这个标志被设置为true。
+
+在输出端，shouldAllocateBuffer=false意味着AU可以假设它将被非空输出缓冲区调用。如果shouldAllocateBuffer=true(默认值)，AU必须准备好被null指针调用，并用指向内部分配缓冲区的指针替换它们。
+
+在输入端，shouldAllocateBuffer=false意味着AU可以使用带有空缓冲指针的缓冲列表来拉入输入，并且假设拉入输入块将提供指针。
+如果shouldAllocateBuffer=true(默认值)，AU必须使用非空指针拉取输入，同时还在为输入源准备，以便用自己的指针替换它们。
+
+```
+/**    @property    enabled
+    @brief        Whether the bus is active.
+    @discussion
+        Hosts must enable input busses before using them. The reason for this is to allow a unit
+        such as a mixer to be prepared to render a large number of inputs, but avoid the work
+        of preparing to pull inputs which are not in use.
+        
+        Bridged to the v2 properties kAudioUnitProperty_MakeConnection and
+        kAudioUnitProperty_SetRenderCallback.
+*/
+open var isEnabled: Bool
+```
+当前音频轨是否被激活
+主程序必须在使用输入音频轨之前打开该音频轨.
+因为当一个音频处理单元将要去准备渲染大量输入时,需要音频的输入(tm 废话)
+
+```
+/**    @property    name
+    @brief        A name for the bus. Can be set by host.
+*/
+open var name: String?
+```
+音频轨的名称可由主程序设定
+
+
+```
+/** @property   index
+    @brief      The index of this bus in the containing array.
+*/
+open var index: Int { get }
+```
+当前音频轨在音频轨组里面的序号
+
+```
+/** @property   busType
+    @brief      The AUAudioUnitBusType.
+*/
+open var busType: AUAudioUnitBusType { get }
+```
+是输入还是输出
+
+```
+/** @property   ownerAudioUnit
+    @brief      The audio unit that owns the bus.
+*/
+unowned(unsafe) open var ownerAudioUnit: AUAudioUnit { get }
+```
+拥有此音频轨的 AU
+
+```
+/**    @property    supportedChannelLayoutTags
+    @discussion
+        This is an array of NSNumbers representing AudioChannelLayoutTag.
+*/
+open var supportedChannelLayoutTags: [NSNumber]? { get }
+```
+
+```
+/**    @property    contextPresentationLatency
+@brief        Information about latency in the audio unit's processing context.
+@discussion
+    This should not be confused with the audio unit's latency property, where the audio unit
+    describes to the host any processing latency it introduces between its input and its output.
+    
+    A host may set this property to describe to the audio unit the presentation latency of its
+    input and/or output audio data. Latency is described in seconds. A value of zero means
+    either no latency or an unknown latency.
+    
+    A host should set this property on each active bus, since, for example, the audio routing
+    path to each of multiple output busses may differ.
+    
+    For input busses:
+        Describes how long ago the audio arriving on this bus was acquired. For instance, when
+        reading from a file to the first audio unit in a chain, the input presentation latency
+        is zero. For audio input from a device, this initial input latency is the presentation
+        latency of the device itself, i.e. the device's safety offset and latency.
+        
+        A second chained audio unit's input presentation latency will be the input presentation
+        latency of the first unit, plus the processing latency of the first unit.
+        
+    For output busses:
+        Describes how long it will be before the output audio of an audio unit is presented. For
+        instance, when writing to a file, the output presentation latency of the last audio unit
+        in a chain is zero. When the audio from that audio unit is to be played to a device,
+        then that initial presentation latency will be the presentation latency of the device
+        itself, which is the I/O buffer size, plus the device's safety offset and latency
+        
+        A previous chained audio unit's output presentation latency is the last unit's
+        presentation latency plus its processing latency.
+        
+    So, for a given audio unit anywhere within a mixing graph, the input and output presentation latencies describe to that unit how long from the moment of generation it has taken for its input to arrive, and how long it will take for its output to be presented.
+    
+    Bridged to the v2 property kAudioUnitProperty_PresentationLatency.
+*/
+open var contextPresentationLatency: TimeInterval
+```
+在 AU 的上下文中的延迟信息
+此延迟不应与描述 AU 处理延迟的 AU 的latency属性混淆,
+主机可以设置此属性来向音频单元描述其输入和/或输出音频数据的呈现延迟。延迟时间以秒为单位描述。值为0意味着没有延迟或未知延迟。是要求的延迟(如要求一段音频几秒后在输出)
+
+主机应该在每个活动音频轨上设置这个属性，因为，例如，到每个输出总线的音频的路径可能不同。
+
+对输入总线胃炎:
+描述多久以前的音频到达了这条音轨上被获取。例如，当从文件读取到数据链中的数据到第一个AU时，输入表示延迟为零。对于来自设备的音频输入，这个初始输入延迟是设备本身的呈现延迟，即设备的安全偏移和延迟。
+
+下一个音频单元的输入呈现延迟将为第一单元的输入呈现延迟加上第一单元的处理延迟。
+
+对于输出总线:
+描述音频单元的输出音频显示前需要多长时间。例如，当写入文件时，链中最后一个音频单元的输出呈现延迟为零。当音频单元的音频要播放到设备上时，那么初始的呈现延迟将是设备本身的呈现延迟，即I/O缓冲区的大小，加上设备的安全偏移和延迟
+
+前一个音频单元的输出呈现延迟是最后一个单元的呈现延迟加上它的处理延迟。
+
+{所以，对于进行混音单音频单元,input and output presentation latencies
+将描述该单元从生成时刻到输入到达所花费的时间，以及输出呈现所花费的时间。}翻译的有问题后面慢慢翻译
+
+## AUAudioUnitPreset
+AU提供给实现者的一些列参数,来制造一系列有用的声音或者起点?
+
+```
+/**    @property    number
+    @brief        The preset's unique numeric identifier.
+*/
+open var number: Int
+```
+```
+/**    @property    name
+    @brief        The preset's name.
+*/
+open var name: String
+```
+预设的名字和 id
